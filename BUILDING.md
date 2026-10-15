@@ -100,6 +100,11 @@ opening, then the first map of every world, about 12 s each) with N64Recomp-brow
   each, one page at a time, the plan's first 60 s: headless Chrome 155 waited 2.1 s for 18 and drew 59.4 presents a
   second (median), Firefox 158 waited 4.1 s for the boot's 59 and drew 58.7, no sound short after the waits, no WebGPU
   errors.
+- On N64Recomp-browser v0.46.0 (main 25f69f8 built with its pin moved there, served locally) on 2026-10-15, RTX 2070, a
+  fresh profile each, one page at a time, a host 14-27% busy, the plan's first 120 s: headless Chrome 155 waited 1.7 s
+  for 18 and drew 58.4 presents a second (median), Firefox 158 waited 3.9 s for the boot's 59 and up to 1.6 s a world
+  and drew 57.8; at 3840x2000 (`--play 25`) Chrome waited 1.7 s and drew 59.6, Firefox 3.8 s and 59.2. No sound short,
+  no WebGPU errors.
 
 Render to RAM is off on the page: on, the same 200 s in Jinjo Village and Terrydactyland drew 48.6 presents a second
 with the sound about 10,000 frames short, against 59.0 and none off (headless Chrome 155). With it off, RT64 made every
