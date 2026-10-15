@@ -27,3 +27,6 @@ package/
 # Python bytecode from the tools.
 __pycache__/
 *.pyc
+
+# The web page's build (BUILDING.md, "The web page"), inside the checkout for ccache
+build-web*/

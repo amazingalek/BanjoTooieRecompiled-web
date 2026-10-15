@@ -79,6 +79,12 @@ inline unsigned short host_backtrace(void** frames, unsigned count) {
 inline uintptr_t host_image_base() {
     return reinterpret_cast<uintptr_t>(&__ImageBase);
 }
+#elif defined(__EMSCRIPTEN__)
+// WebAssembly has no stack to walk from inside: the browser's console shows
+// one with each error instead.
+inline unsigned short host_backtrace(void**, unsigned) { return 0; }
+
+inline uintptr_t host_image_base() { return 0; }
 #else
 #include <execinfo.h>
 

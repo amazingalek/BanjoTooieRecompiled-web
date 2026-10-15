@@ -79,7 +79,9 @@ def parse_builtin_func_names():
     the host has no mapping for. Naming them routes calls to the runtime's
     handlers (or to the ignored-function path) instead.
     """
-    path = os.path.join(ROOT, "..", "N64Recomp", "src", "symbol_lists.cpp")
+    # The recompiler's own lists, in its submodule. A missing file names none
+    # of them, and the code then comes out with every libultra copy unnamed.
+    path = os.path.join(ROOT, "lib", "N64Recomp", "src", "symbol_lists.cpp")
     if not os.path.exists(path):
         return set()
     text = open(path, encoding="utf-8").read()

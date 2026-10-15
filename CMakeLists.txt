@@ -28,6 +28,38 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
     cmake_policy(SET CMP0135 NEW)
 endif()
 
+# With Emscripten (emcmake cmake), the game builds as a page for a browser, BanjoTooieRecompiled.html, through
+# lib/N64Recomp-browser/frontend: RT64 and the menus on WebGPU, mods off. tools/build_web.sh does the whole build
+# (BUILDING.md).
+if (EMSCRIPTEN)
+    # lib/ holds N64Recomp-browser's web support patched in on top of patches/: tools/build_web.sh does that.
+    # Threads are pthreads (SharedArrayBuffer), and the runtime ends a game thread by throwing. -msimd128 is wasm SIMD,
+    # which every browser with WebGPU has; -mtail-call makes the recompiled code's tail calls return_calls.
+    add_compile_options(-pthread -fwasm-exceptions -msimd128 -mtail-call)
+    # With -msimd128 xxHash would take its NEON path through Emscripten's arm_neon.h, which doesn't compile in C++
+    # there. XXH_HAS_INCLUDE is used for nothing else, so XXH3 stays scalar.
+    add_compile_options("-DXXH_HAS_INCLUDE(x)=0")
+    add_link_options(-pthread -fwasm-exceptions -mtail-call)
+    # ccache when it is on PATH.
+    include(${CMAKE_SOURCE_DIR}/lib/N64Recomp-browser/frontend/build_speed.cmake)
+    # The shaders the page specializes at build time and builds before the game draws with them (src/rt64_shaders.txt
+    # says what was played to record them).
+    if (EXISTS ${CMAKE_SOURCE_DIR}/src/rt64_shaders.txt)
+        set(RT64_PREBUILT_SHADER_LIST ${CMAKE_SOURCE_DIR}/src/rt64_shaders.txt)
+    endif()
+endif()
+
+# The recompiled code. The page's is made by tools/build_web.sh from the player's ROM, with N64Recomp patched by
+# N64Recomp-browser too (its tail calls and float rounding), into build/RecompiledFuncs-web.
+if (EMSCRIPTEN)
+    set(TOOIE_RECOMPILED_FUNCS ${CMAKE_SOURCE_DIR}/build/RecompiledFuncs-web)
+    if (NOT EXISTS ${TOOIE_RECOMPILED_FUNCS}/funcs.h)
+        message(FATAL_ERROR "No ${TOOIE_RECOMPILED_FUNCS}: build the page with tools/build_web.sh (BUILDING.md)")
+    endif()
+else()
+    set(TOOIE_RECOMPILED_FUNCS ${CMAKE_SOURCE_DIR}/RecompiledFuncs)
+endif()
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
@@ -56,6 +88,12 @@ set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(${N64MODERNRUNTIME_DIR} ${CMAKE_BINARY_DIR}/N64ModernRuntime)
 
+if (EMSCRIPTEN)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/lib/N64Recomp-browser/frontend ${CMAKE_BINARY_DIR}/web_frontend)
+    # fmt 11.1 (N64Recomp's) leans on <cstdlib> arriving through other headers, which Emscripten's libc++ doesn't do.
+    target_compile_options(fmt PRIVATE -include cstdlib)
+endif()
+
 target_include_directories(rt64 PRIVATE ${CMAKE_BINARY_DIR}/rt64/src)
 
 # --- RecompiledFuncs --------------------------------------------------------
@@ -67,9 +105,17 @@ add_library(RecompiledFuncs STATIC)
 target_compile_options(RecompiledFuncs PRIVATE
     -fno-strict-aliasing
     -Wno-unused-variable
-    -Wno-implicit-function-declaration
     -falign-functions=16
 )
+
+# WebAssembly checks a call's signature when it links and turns a call to an undeclared function into a trap, so with
+# Emscripten that is an error in the recompiled code. N64Recomp-browser's funcs.h declares everything its code calls,
+# and include/tooie_recomp.h what the hooks call.
+if (EMSCRIPTEN)
+    target_compile_options(RecompiledFuncs PRIVATE -Werror=implicit-function-declaration)
+else()
+    target_compile_options(RecompiledFuncs PRIVATE -Wno-implicit-function-declaration)
+endif()
 
 target_include_directories(RecompiledFuncs PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -78,8 +124,8 @@ target_include_directories(RecompiledFuncs PRIVATE
     ${N64MODERNRUNTIME_DIR}/N64Recomp/include
 )
 
-file(GLOB FUNC_C_SOURCES ${CMAKE_SOURCE_DIR}/RecompiledFuncs/*.c)
-file(GLOB FUNC_CXX_SOURCES ${CMAKE_SOURCE_DIR}/RecompiledFuncs/*.cpp)
+file(GLOB FUNC_C_SOURCES ${TOOIE_RECOMPILED_FUNCS}/*.c)
+file(GLOB FUNC_CXX_SOURCES ${TOOIE_RECOMPILED_FUNCS}/*.cpp)
 target_sources(RecompiledFuncs PRIVATE ${FUNC_C_SOURCES} ${FUNC_CXX_SOURCES})
 
 # --- Main executable --------------------------------------------------------
@@ -100,7 +146,7 @@ set(SOURCES
 target_include_directories(BanjoTooieRecompiled PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/RecompiledFuncs
+    ${TOOIE_RECOMPILED_FUNCS}
     ${N64MODERNRUNTIME_DIR}/N64Recomp/include
     # rt64_extended_gbi.h: the extended-GBI command words and hook opcodes the
     # interpolation metadata in src/recomp_api.cpp is derived from.
@@ -245,11 +291,14 @@ endif()
 # so RecompFrontend's calls do not see rt64's copy -- they see this one. Without
 # it the command line starts with the first option and the shell reports
 # `-spirv: not found`.
-if (WIN32)
+#
+# DXC runs on the machine that builds, which for the page (Emscripten) isn't the target, so the host picks the binary
+# (the page is 32-bit wasm, which would pick the arm64 dxc-linux on an x86-64 Linux host).
+if (CMAKE_HOST_WIN32)
     set(DXC "${RT64_DIR}/src/contrib/dxc/bin/x64/dxc.exe")
-elseif (APPLE)
+elseif (CMAKE_HOST_APPLE)
     # dxc-macos is a shell script that finds its libraries through DYLD_LIBRARY_PATH.
-    if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
         set(DXC "DYLD_LIBRARY_PATH=${RT64_DIR}/src/contrib/dxc/lib/x64" "${RT64_DIR}/src/contrib/dxc/bin/x64/dxc-macos")
     else()
         set(DXC "DYLD_LIBRARY_PATH=${RT64_DIR}/src/contrib/dxc/lib/arm64" "${RT64_DIR}/src/contrib/dxc/bin/arm64/dxc-macos")
@@ -259,7 +308,7 @@ else()
     # so the leading `VAR=value` element is load-bearing: CMake emits it
     # unquoted, and the shell reads it as an environment assignment for the
     # command that follows.
-    if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    if (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
         set(DXC "LD_LIBRARY_PATH=${RT64_DIR}/src/contrib/dxc/lib/x64" "${RT64_DIR}/src/contrib/dxc/bin/x64/dxc-linux")
     else()
         set(DXC "LD_LIBRARY_PATH=${RT64_DIR}/src/contrib/dxc/lib/arm64" "${RT64_DIR}/src/contrib/dxc/bin/arm64/dxc-linux")
@@ -278,8 +327,16 @@ target_link_libraries(BanjoTooieRecompiled PRIVATE
     librecomp
     ultramodern
     rt64
-    nfd
 )
+
+if (EMSCRIPTEN)
+    # The page (lib/N64Recomp-browser/frontend), with the menus' assets in its .data file. No ROM: the player picks
+    # theirs in the launcher, and it stays in the browser.
+    n64recomp_browser_frontend_page(BanjoTooieRecompiled)
+    target_link_options(BanjoTooieRecompiled PRIVATE "SHELL:--preload-file ${CMAKE_SOURCE_DIR}/assets@/assets")
+else()
+    target_link_libraries(BanjoTooieRecompiled PRIVATE nfd)
+endif()
 
 target_sources(BanjoTooieRecompiled PRIVATE ${SOURCES})
 
@@ -299,10 +356,12 @@ if (DEFINED ENV{BT_VERSION} AND NOT "$ENV{BT_VERSION}" STREQUAL "")
 endif()
 
 # recompui loads its stylesheet and fonts from `assets/` relative to the
-# working directory.
+# working directory (on the page, from its .data file).
+if (NOT EMSCRIPTEN)
 add_custom_command(TARGET BanjoTooieRecompiled POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/assets
         $<TARGET_FILE_DIR:BanjoTooieRecompiled>/assets)
+endif()
 
 set_property(TARGET BanjoTooieRecompiled PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")

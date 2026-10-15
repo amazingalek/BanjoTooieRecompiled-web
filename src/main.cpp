@@ -16,7 +16,9 @@
 #include <stdexcept>
 #include <vector>
 
-#include "nfd.h"
+#ifndef __EMSCRIPTEN__
+#include "nfd.h" // a browser has no native file dialogs; RecompFrontend asks the page instead
+#endif
 
 #include "ultramodern/ultra64.h"
 #include "ultramodern/ultramodern.hpp"
@@ -43,6 +45,9 @@
 #include "recompui/renderer.h"
 #include "recompui/config.h"
 #include "util/file.h"
+#ifdef __EMSCRIPTEN__
+#include "audio_output.h"
+#endif
 #include "recompinput/input_events.h"
 #include "recompinput/recompinput.h"
 #include "recompinput/profiles.h"
@@ -95,8 +100,17 @@ ultramodern::gfx_callbacks_t::gfx_data_t create_gfx() {
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK |
-                 SDL_INIT_HAPTIC) > 0) {
+    // Emscripten's SDL2 is built without haptics, and asking for them there
+    // fails the whole call, gamepads with it. Nothing uses them: rumble goes
+    // through SDL_JoystickRumble.
+#ifdef __EMSCRIPTEN__
+    const Uint32 sdl_subsystems =
+        SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK;
+#else
+    const Uint32 sdl_subsystems = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER |
+                                  SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC;
+#endif
+    if (SDL_Init(sdl_subsystems) > 0) {
         exit_error("Failed to initialize SDL2: %s\n", SDL_GetError());
     }
 
@@ -169,6 +183,30 @@ static uint32_t discarded_output_frames = 0;
 
 constexpr uint32_t bytes_per_frame = input_channels * sizeof(float);
 
+// On a page, sound plays through N64Recomp-browser's AudioWorklet output
+// (audio_output.h) instead of SDL's queue: Emscripten's SDL2 plays from the
+// page's thread, where WebGPU's work runs, and its sound breaks up whenever
+// that thread is busy.
+#ifdef __EMSCRIPTEN__
+static uint64_t get_queued_audio_bytes() {
+    return uint64_t(n64recomp_browser::audio::queued_frames()) *
+           output_channels * sizeof(float);
+}
+
+static void queue_audio(const float* samples, uint32_t byte_count) {
+    n64recomp_browser::audio::queue(
+        samples, byte_count / (output_channels * sizeof(float)));
+}
+#else
+static uint64_t get_queued_audio_bytes() {
+    return SDL_GetQueuedAudioSize(audio_device);
+}
+
+static void queue_audio(const float* samples, uint32_t byte_count) {
+    SDL_QueueAudio(audio_device, samples, byte_count);
+}
+#endif
+
 void queue_samples(int16_t* audio_data, size_t sample_count) {
     static std::vector<float> swap_buffer;
     static std::array<float, duplicated_input_frames * input_channels>
@@ -214,7 +252,7 @@ void queue_samples(int16_t* audio_data, size_t sample_count) {
     }
 
     const uint64_t cur_queued_microseconds =
-        static_cast<uint64_t>(SDL_GetQueuedAudioSize(audio_device)) /
+        get_queued_audio_bytes() /
         bytes_per_frame * 1000000 / sample_rate;
     uint32_t num_bytes_to_queue =
         audio_convert.len_cvt -
@@ -234,12 +272,12 @@ void queue_samples(int16_t* audio_data, size_t sample_count) {
         }
     }
 
-    SDL_QueueAudio(audio_device, samples_to_queue, num_bytes_to_queue);
+    queue_audio(samples_to_queue, num_bytes_to_queue);
 }
 
 size_t get_frames_remaining() {
     constexpr float buffer_offset_frames = 1.0f;
-    uint64_t buffered_byte_count = SDL_GetQueuedAudioSize(audio_device);
+    uint64_t buffered_byte_count = get_queued_audio_bytes();
 
     buffered_byte_count =
         buffered_byte_count * 2 * sample_rate / output_sample_rate /
@@ -274,6 +312,9 @@ void set_frequency(uint32_t freq) {
 }
 
 bool reset_audio(uint32_t output_freq) {
+#ifdef __EMSCRIPTEN__
+    output_freq = n64recomp_browser::audio::open(output_channels);
+#else
     SDL_AudioSpec spec_desired{};
     spec_desired.freq = static_cast<int>(output_freq);
     spec_desired.format = AUDIO_F32;
@@ -291,6 +332,7 @@ bool reset_audio(uint32_t output_freq) {
     }
 
     SDL_PauseAudioDevice(audio_device, 0);
+#endif
     output_sample_rate = output_freq;
     update_audio_converter();
     return true;
@@ -478,8 +520,11 @@ void initialize_launcher_menu(recompui::LauncherMenu* menu) {
                                                     "Start Game");
     game_options->add_setup_controls_option();
     game_options->add_settings_option();
+#ifndef __EMSCRIPTEN__
+    // A page has no mods (the live recompiler emits machine code), and a program that ends leaves it dead.
     game_options->add_mods_option();
     game_options->add_exit_option();
+#endif
 
     // `Right` anchors the column to the bottom-right corner of the menu
     // container (right/bottom 24dp, which the container has already inset 24dp
@@ -583,11 +628,21 @@ int main(int argc, char** argv) {
 #endif
     std::fprintf(stderr, "[tooie] step timebeginperiod\n"); std::fflush(stderr);
 
+#ifndef __EMSCRIPTEN__
     if (NFD_Init() != NFD_OKAY) {
         std::fprintf(stderr, "NFD_Init failed: %s\n", NFD_GetError());
         return EXIT_FAILURE;
     }
+#endif
     std::fprintf(stderr, "[tooie] step nfd\n"); std::fflush(stderr);
+
+#ifdef __EMSCRIPTEN__
+    // Render to RAM draws every frame a second time at the N64's resolution and copies it back into RDRAM, and in a
+    // browser that copy makes each display list wait 5-6 ms. Nothing here reads a frame on the CPU: the game's frame
+    // copies (the pause menu's background, the transitions) are drawn by the RDP, from the frame as a texture, which
+    // RT64 does on the GPU.
+    recompui::renderer::set_render_to_ram(false);
+#endif
 
     recompui::programconfig::set_program_name("Banjo-Tooie: Recompiled");
     recompui::programconfig::set_program_id(u8"BanjoTooieRecompiled");
@@ -619,7 +674,9 @@ int main(int argc, char** argv) {
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0 || !reset_audio(48000)) {
         std::fprintf(stderr, "Unable to initialize SDL audio\n");
         SDL_Quit();
+#ifndef __EMSCRIPTEN__
         NFD_Quit();
+#endif
         return EXIT_FAILURE;
     }
     std::fprintf(stderr, "[tooie] step audio\n"); std::fflush(stderr);
@@ -723,7 +780,9 @@ int main(int argc, char** argv) {
         SDL_CloseAudioDevice(audio_device);
     }
     SDL_Quit();
+#ifndef __EMSCRIPTEN__
     NFD_Quit();
+#endif
 
 #ifdef _WIN32
     timeEndPeriod(1);

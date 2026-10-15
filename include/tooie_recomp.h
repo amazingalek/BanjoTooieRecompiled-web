@@ -21,6 +21,12 @@ void tooie_boot_pi_raw_start_dma(uint8_t* rdram, recomp_context* ctx);
 void tooie_boot_register_core1(uint8_t* rdram, recomp_context* ctx);
 void tooie_boot_register_core2(uint8_t* rdram, recomp_context* ctx);
 
+// `mfc0 $x, Count`, which the patched N64Recomp turns into this call. Declared
+// here because the recomp.h the build includes is N64ModernRuntime's, which
+// doesn't have it, and WebAssembly turns a call to an undeclared function (an
+// int, by C's old rule) into a trap.
+gpr cop0_count_read(recomp_context* ctx);
+
 // Supplied for the boot-prefixed copies of libultra whose hardware-facing
 // implementations cannot run on the host.
 void tooie_rom_read_word(uint8_t* rdram, recomp_context* ctx);
