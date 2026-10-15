@@ -96,6 +96,10 @@ opening, then the first map of every world, about 12 s each) with N64Recomp-brow
   cut off by `coi_serviceworker.js`'s reload.
 - At 3840x2000, about 7 times a laptop window's pixels (`--size 3840x2000 --play 25`), Chrome drew 59.4 presents a
   second and Firefox 59.2 after the boot's wait, the GPU 37-38% busy, no sound short.
+- From Pages, built on N64Recomp-browser v0.43.0 (main 4ca79dc), on 2026-10-15, RTX 2070, 1256x645, a fresh profile
+  each, one page at a time, the plan's first 60 s: headless Chrome 155 waited 2.1 s for 18 and drew 59.4 presents a
+  second (median), Firefox 158 waited 4.1 s for the boot's 59 and drew 58.7, no sound short after the waits, no WebGPU
+  errors.
 
 Render to RAM is off on the page: on, the same 200 s in Jinjo Village and Terrydactyland drew 48.6 presents a second
 with the sound about 10,000 frames short, against 59.0 and none off (headless Chrome 155). With it off, RT64 made every
