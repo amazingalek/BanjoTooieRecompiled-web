@@ -1,5 +1,20 @@
 # Banjo-Tooie: Recompiled
 
+> [!WARNING]
+> **This is amazingalek/BanjoTooieRecompiled-web, a fork, not Banjo-Tooie: Recompiled.** Its `main` branch builds the
+> game into a web page (WebGPU, through [N64Recomp-browser](https://github.com/amazingalek/N64Recomp-browser)), and
+> everything on that branch past upstream's commits was written by AI (Claude). It is not made, endorsed or supported
+> by upstream's author: nothing here is offered upstream, and please don't take issues with this fork to them. Building
+> the page: [BUILDING.md](BUILDING.md).
+>
+> This port is here to build out and test N64Recomp-browser's web support on another game: what it turns up is fixed
+> there where it can be, so every recomp's page gets the fix.
+
+**Play it in the browser: https://amazingalek.github.io/BanjoTooieRecompiled-web/**, with your own ROM, picked in the
+launcher and kept in the browser. It needs WebGPU (Chrome or Edge 113 and up, or Firefox 141 and up on Windows). The
+page is built from this branch and published with N64Recomp-browser's `tools/publish_page.sh`, so it can be a commit
+or two behind.
+
 A native PC port of **Banjo-Tooie (USA)** produced by statically recompiling the
 original N64 ROM with [N64Recomp](https://github.com/N64Recomp/N64Recomp), and
 rendering through [RT64](https://github.com/rt64/rt64).

@@ -1,0 +1,76 @@
+# Building the web page
+
+This fork's `main` branch builds the game with [Emscripten](https://emscripten.org) into a page,
+`BanjoTooieRecompiled.html`, that draws through WebGPU. The desktop build is upstream's and unchanged: README.md's
+Building section.
+
+`lib/rt64`, `lib/N64ModernRuntime`, `lib/RecompFrontend` and `lib/N64Recomp` are upstream's, at the same commits, and
+patched by `patches/` as upstream patches them (`tools/setup_deps.py`).
+[N64Recomp-browser](https://github.com/amazingalek/N64Recomp-browser) (`lib/N64Recomp-browser`) puts the web support
+on top of those (its `patches/apply.cmake`) and makes the game a page (its `frontend/`). Where the two change the same
+code, `tools/build_web.sh` leaves N64Recomp-browser's change out of that file: `thread_queue_remove`, which upstream's
+runtime patch fixes too, and the recompiler's jump tables in another section, whose analysis upstream's N64Recomp
+patch rewrites.
+
+The page needs recompiled code of its own: the committed `RecompiledFuncs/` is C from upstream's N64Recomp, and the
+page's comes from the web-patched one, which writes a tail call as a `return_call` and keeps the FPU's rounding mode
+for float-to-int conversions (WebAssembly's own instructions only round to nearest). So `tools/build_web.sh` makes it
+from your ROM into `build/RecompiledFuncs-web`, as `tools/autostub.py` makes upstream's.
+
+Mods a player adds are off on the page (the live recompiler writes machine code, which a page can't load), so are
+Exit (it would leave the page dead) and RT64's render to RAM (`src/main.cpp` says why).
+
+## What it needs
+
+- The US ROM of Banjo-Tooie, once: `build/decompressed.us.z64` is made from it and kept.
+- The [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html), installed and activated
+  (`source emsdk_env.sh`).
+- [naga](https://github.com/gfx-rs/wgpu/tree/trunk/naga) on `PATH` (`cargo install naga-cli`), which turns the shaders
+  into WGSL, and `spirv-opt` ([SPIRV-Tools](https://github.com/KhronosGroup/SPIRV-Tools)), without which the shaders
+  come out about twice the size.
+- A host clang and clang++ for the recompiler (`HOST_CC` and `HOST_CXX` pick others), CMake 3.20+, Ninja, git and
+  Python 3 with `venv` (the script installs rabbitizer into `build/venv`).
+- [ccache](https://ccache.dev) on `PATH`, optional: a second build dir, or another checkout with `build-web` inside it,
+  then compiles nothing that was compiled before.
+
+It was built on Linux, in the Docker image N64Recomp-browser's README describes.
+
+## Building
+
+```bash
+git clone --recursive https://github.com/amazingalek/BanjoTooieRecompiled-web
+cd BanjoTooieRecompiled-web
+tools/build_web.sh "path/to/Banjo-Tooie (USA).z64"
+```
+
+Run again after a pull, without the ROM: each step skips what is done. `WEB_CMAKE_ARGS` goes to the configure
+(`-DN64RECOMP_BROWSER_FAST_LINK=ON` for a quick link while trying something, never for a page people play).
+
+`build-web` then holds `BanjoTooieRecompiled.html`, `.js`, `.wasm`, `.data` and `coi_serviceworker.js`. The page must
+be cross-origin isolated: serve the folder with `Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`, or on a host that can't set headers (GitHub Pages), as is, and
+`coi_serviceworker.js` sets them after one reload. The player picks their ROM in the launcher; it, the settings and the
+saves are kept in the browser's IndexedDB for that origin.
+
+## The shaders
+
+The page builds the game's shaders from `src/rt64_shaders.txt` (`RT64_PREBUILT_SHADER_LIST` in `CMakeLists.txt`), in
+sections, one a world. In Chrome they are built behind the game from its first frame, and the game waits only when a
+frame wants 4 or more that aren't built yet, under a small "Preparing graphics" indicator in a corner; Chrome keeps
+them for the visits after. Firefox builds a pipeline in line with the rest of its GPU work, so there the game waits
+instead: on its first frame for the list's boot, and for a world's section when a frame first wants 4 of its shaders.
+Without them RT64 would draw with its ubershader meanwhile, which integrated graphics can't keep up with. A shader the
+list missed is built behind the game, and the page remembers it and builds it with the rest on the next visit.
+
+The list is recorded by code, not by hand: `tools/shader_plan.json` (written by `tools/make_plans.py`) is a plan for
+N64Recomp-browser's `tools/record_shaders.mjs`, which boots the page, starts a new game and, for each section, sends
+Banjo to the maps of one world with `tools/shader_survey.js`, looking around on each. That script needs no change to
+the game: a map change is a request the game's own code leaves in RAM, and the survey leaves the same one (its header
+says where). To record again:
+
+```bash
+python3 tools/make_plans.py
+node lib/N64Recomp-browser/tools/record_shaders.mjs tools/shader_plan.json build-web <rom> src/rt64_shaders.txt
+```
+
+then put back the list's header. The list's header says what was played.
