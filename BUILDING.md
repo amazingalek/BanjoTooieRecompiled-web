@@ -74,3 +74,30 @@ node lib/N64Recomp-browser/tools/record_shaders.mjs tools/shader_plan.json build
 ```
 
 then put back the list's header. The list's header says what was played.
+
+## How it plays
+
+The desktop build (upstream's release, Windows, RTX 2070), game frames a second at the first map of each world: Jinjo
+Village, Glitter Gulch Mine, Ordnance Storage, Mayahem Temple and Cloud Cuckooland 30, Terrydactyland 12, Hailfire
+Peaks 10. Entering Ordnance Storage and Mayahem Temple didn't crash there.
+
+The page from Pages (main c829a51, gh-pages 7751c2a, N64Recomp-browser 7277a2e) on 2026-10-15, RTX 2070, 1256x645, a
+fresh profile each, the host's every core busy with other work, by `tools/play_plan.json` (the boot, a new game's
+opening, then the first map of every world, about 12 s each) with N64Recomp-browser's `tools/play_page.mjs`:
+
+- Headless Chrome 155 waited 2.0 s for 18 of the boot's shaders and had built all 160 pipelines 24 s in; Firefox 158
+  waited 4.0 s for the boot's 59 and then up to 1.6 s for a world's. Through the menus, the opening and the worlds up
+  to Jolly Roger's Lagoon Chrome drew 59 presents a second, Firefox 49-58 with its waits for each world in it (49.2
+  and 53.6, the medians of the whole run).
+- In Terrydactyland, Grunty Industries, Hailfire Peaks, Cloud Cuckooland and Cauldron Keep both drew 12-45: the game's
+  own rate there, which the desktop shares. RT64 paces its presents there (`presents paced to the game's frames`), one
+  a game frame, 12-14 a second in Hailfire Peaks: the game's frames come unevenly, while the GPU is 30-39% busy.
+- No sound short after the boot's wait, and no WebGPU errors. Firefox's one exception is the first load's wasm fetch,
+  cut off by `coi_serviceworker.js`'s reload.
+- At 3840x2000, about 7 times a laptop window's pixels (`--size 3840x2000 --play 25`), Chrome drew 59.4 presents a
+  second and Firefox 59.2 after the boot's wait, the GPU 37-38% busy, no sound short.
+
+Render to RAM is off on the page: on, the same 200 s in Jinjo Village and Terrydactyland drew 48.6 presents a second
+with the sound about 10,000 frames short, against 59.0 and none off (headless Chrome 155). With it off, RT64 made every
+tile copy a new texture until rt64-web 8bea892: the game makes 4 a frame, and the page had 16,690 textures and 2.7 GB
+of video memory after those 200 s, its frame rate falling. Now it keeps 4 copies and about 300 textures, 53 MB, flat.
