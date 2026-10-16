@@ -55,8 +55,8 @@ saves are kept in the browser's IndexedDB for that origin.
 ## The shaders
 
 The page builds the game's shaders from `src/rt64_shaders.txt` (`RT64_PREBUILT_SHADER_LIST` in `CMakeLists.txt`), in
-sections, one a world. In Chrome they are built behind the game from its first frame, and the game waits only when a
-frame wants 4 or more that aren't built yet, under a small "Preparing graphics" indicator in a corner; Chrome keeps
+sections, one a world. In Chrome they are built in the background, and the game waits only when a frame
+wants 4 or more that aren't built yet, under a small "Preparing graphics" indicator in a corner; Chrome keeps
 them for the visits after. Firefox builds a pipeline in line with the rest of its GPU work, so there the game waits
 instead: on its first frame for the list's boot, and for a world's section when a frame first wants 4 of its shaders.
 Without them RT64 would draw with its ubershader meanwhile, which integrated graphics can't keep up with. A shader the

@@ -444,9 +444,10 @@ it. Count is now a first-class register, supplied by the host from `osGetCount()
 (the same 46.875 MHz clock ultramodern models).
 
 ⚠ The build resolves `recomp.h` to the copy **nested inside N64ModernRuntime**,
-which is unpatched, so `cop0_count_read` compiles via
-`-Wno-implicit-function-declaration`. Harmless here (`ADD32`/`SUB32` truncate to
-32 bits) but fragile: if you need it, declare it in `include/tooie_recomp.h`.
+which doesn't declare `cop0_count_read`, so `include/tooie_recomp.h` does (the
+recompiled code includes it through the config's `recomp_include`): WebAssembly
+turns a call to an undeclared function into a trap, and a web build compiles the
+recompiled code with `-Werror=implicit-function-declaration` (`CMakeLists.txt`).
 Do **not** point the include path at `lib/N64Recomp` — that would make the
 patched recompiler a *build* dependency.
 
