@@ -77,44 +77,23 @@ then put back the list's header. The list's header says what was played.
 
 ## How it plays
 
-The desktop build (upstream's release, Windows, RTX 2070), game frames a second at the first map of each world: Jinjo
-Village, Glitter Gulch Mine, Ordnance Storage, Mayahem Temple and Cloud Cuckooland 30, Terrydactyland 12, Hailfire
-Peaks 10. Entering Ordnance Storage and Mayahem Temple didn't crash there.
+How the page plays is recorded in N64Recomp-browser's
+[plays.jsonl](https://github.com/amazingalek/N64Recomp-browser/blob/main/plays.jsonl) and its
+[games table](https://github.com/amazingalek/N64Recomp-browser#games).
 
-The page from Pages (main c829a51, gh-pages 7751c2a, N64Recomp-browser 7277a2e) on 2026-10-15, RTX 2070, 1256x645, a
-fresh profile each, the host's every core busy with other work, by `tools/play_plan.json` (the boot, a new game's
-opening, then the first map of every world, about 12 s each) with N64Recomp-browser's `tools/play_page.mjs`:
+The desktop build (upstream's release, Windows, RTX 2070) runs the game at 30 frames a second at the first map of Jinjo
+Village, Glitter Gulch Mine, Ordnance Storage, Mayahem Temple and Cloud Cuckooland, 12 in Terrydactyland and 10 in
+Hailfire Peaks, and doesn't crash entering Ordnance Storage or Mayahem Temple.
 
-- Headless Chrome 155 waited 2.0 s for 18 of the boot's shaders and had built all 160 pipelines 24 s in; Firefox 158
-  waited 4.0 s for the boot's 59 and then up to 1.6 s for a world's. Through the menus, the opening and the worlds up
-  to Jolly Roger's Lagoon Chrome drew 59 presents a second, Firefox 49-58 with its waits for each world in it (49.2
-  and 53.6, the medians of the whole run).
-- In Terrydactyland, Grunty Industries, Hailfire Peaks, Cloud Cuckooland and Cauldron Keep both drew 12-45: the game's
-  own rate there, which the desktop shares. RT64 paces its presents there (`presents paced to the game's frames`), one
-  a game frame, 12-14 a second in Hailfire Peaks: the game's frames come unevenly, while the GPU is 30-39% busy.
-- No sound short after the boot's wait, and no WebGPU errors. Firefox's one exception is the first load's wasm fetch,
-  cut off by `coi_serviceworker.js`'s reload.
-- At 3840x2000, about 7 times a laptop window's pixels (`--size 3840x2000 --play 25`), Chrome drew 59.4 presents a
-  second and Firefox 59.2 after the boot's wait, the GPU 37-38% busy, no sound short.
-- From Pages, built on N64Recomp-browser v0.43.0 (main 4ca79dc), on 2026-10-15, RTX 2070, 1256x645, a fresh profile
-  each, one page at a time, the plan's first 60 s: headless Chrome 155 waited 2.1 s for 18 and drew 59.4 presents a
-  second (median), Firefox 158 waited 4.1 s for the boot's 59 and drew 58.7, no sound short after the waits, no WebGPU
-  errors.
-- On N64Recomp-browser v0.46.0 (main 25f69f8 built with its pin moved there, served locally) on 2026-10-15, RTX 2070, a
-  fresh profile each, one page at a time, a host 14-27% busy, the plan's first 120 s: headless Chrome 155 waited 1.7 s
-  for 18 and drew 58.4 presents a second (median), Firefox 158 waited 3.9 s for the boot's 59 and up to 1.6 s a world
-  and drew 57.8; at 3840x2000 (`--play 25`) Chrome waited 1.7 s and drew 59.6, Firefox 3.8 s and 59.2. No sound short,
-  no WebGPU errors.
+In Terrydactyland, Grunty Industries, Hailfire Peaks, Cloud Cuckooland and Cauldron Keep the page draws 12-45 presents
+a second in both browsers: the game's own rate there, which the desktop build shares. The game's frames come unevenly
+there, while the GPU is 30-39% busy, so RT64 paces its presents to them (`presents paced to the game's frames`), one a
+game frame, 12-14 a second in Hailfire Peaks.
 
-Played on N64Recomp-browser v0.50.0 (main 0afb26f built with its pin moved there, served locally) on 2026-10-16, RTX
-2070, a fresh profile each, one page at a time, a quiet host, by `tools/play_plan.json` with `play_page.mjs`: at
-1256x645 headless Chrome 155 waited 1.4 s and drew 55.2 presents a second (median; headless Chrome drew about 56 frames
-a second that night: four games played from Pages beside their builds, as a control, read 54.8-55.6 too), Firefox 158
-waited 7.3 s and drew 58.0, both at the game's own rate in the later worlds as before; uncapped at 3840x2000
-(`--uncapped --play 25`, the first such run) Chrome drew 335.1 after 1.4 s and Firefox 123.6 after 4.1 s. No sound short
-and no WebGPU errors.
+In Firefox the first load's wasm fetch is cut off by `coi_serviceworker.js`'s reload, which the console shows as an
+exception.
 
-Render to RAM is off on the page: on, the same 200 s in Jinjo Village and Terrydactyland drew 48.6 presents a second
-with the sound about 10,000 frames short, against 59.0 and none off (headless Chrome 155). With it off, RT64 made every
-tile copy a new texture until rt64-web 8bea892: the game makes 4 a frame, and the page had 16,690 textures and 2.7 GB
-of video memory after those 200 s, its frame rate falling. Now it keeps 4 copies and about 300 textures, 53 MB, flat.
+Render to RAM is off on the page: on, 200 s in Jinjo Village and Terrydactyland drew 48.6 presents a second with the
+sound about 10,000 frames short, against 59.0 and none off (headless Chrome 155). With it off, RT64 made every tile
+copy a new texture until rt64-web 8bea892: the game makes 4 a frame, and the page had 16,690 textures and 2.7 GB of
+video memory after those 200 s, its frame rate falling. Now it keeps 4 copies and about 300 textures, 53 MB, flat.
