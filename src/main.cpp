@@ -46,6 +46,10 @@
 #include "recompui/config.h"
 #include "util/file.h"
 #ifdef __EMSCRIPTEN__
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "audio_output.h"
 #endif
 #include "recompinput/input_events.h"
@@ -442,10 +446,32 @@ public:
         // itself, so queueing here is enough.
         const std::string asset_path =
             recompui::file::get_asset_path(std::string(asset).c_str()).string();
+#ifdef __EMSCRIPTEN__
+        // A page's files are in the page's thread's file system, and every
+        // read from another thread waits for that thread: an
+        // istreambuf_iterator reads the 1.4 MB PNG a KB at a time, over a
+        // thousand round trips while the launcher is built. So it is read in
+        // one piece.
+        const int fd = open(asset_path.c_str(), O_RDONLY);
+        struct stat st;
+        const bool file = fd >= 0 && fstat(fd, &st) == 0;
+        if (file) {
+            std::vector<char> bytes(st.st_size);
+            size_t done = 0;
+            while (done < bytes.size()) {
+                const ssize_t got = read(fd, bytes.data() + done, bytes.size() - done);
+                if (got <= 0) {
+                    break;
+                }
+                done += got;
+            }
+            bytes.resize(done);
+#else
         std::ifstream file{asset_path, std::ios::binary};
         if (file) {
             std::vector<char> bytes{std::istreambuf_iterator<char>(file),
                                     std::istreambuf_iterator<char>()};
+#endif
             if (!bytes.empty()) {
                 recompui::queue_image_from_bytes_file(
                     std::string(registered_name), bytes);
@@ -456,6 +482,11 @@ public:
                          asset_path.c_str());
             std::fflush(stderr);
         }
+#ifdef __EMSCRIPTEN__
+        if (fd >= 0) {
+            close(fd);
+        }
+#endif
 
         // A div has no content, so its auto height is 0 and the decorator would
         // have nothing to paint into. Fill the parent explicitly.
