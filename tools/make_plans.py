@@ -3,7 +3,15 @@
 play_page.mjs follow (src/rt64_shaders.txt's header says how the list was recorded with the first). Both reach the game the
 same way: the launcher, Start Game, the title for 25 s, Start (Enter) to the file select, A (Space) on Game 1, which on a
 new profile starts a new game, and its opening cutscene; then tools/shader_survey.js warps to each world's maps, and in each
-the camera turns (the C buttons, the arrow keys) and Banjo walks (W) for a few seconds. Run it again after changing WORLDS."""
+the camera turns (the C buttons, the arrow keys) and Banjo walks (W) for a few seconds. Run it again after changing WORLDS.
+
+The play plan doesn't walk: in each world Banjo jumps and attacks where he lands while the camera turns. A blind walk
+from an entrance, which way the entrance faces unknown, carried him off Hailfire Peaks' and Cloud Cuckooland's ledges,
+or through a world's exit: a laptop's three runs of a 2.5 s walk ended black after Cauldron Keep's, which the page
+draws in Chrome and Firefox at 1256x645 and 1920x945, Chrome's page thread throttled 3 times too, and with a walk out and
+back the game began a change of map of its own in Hailfire Peaks (its jigsaw wipe), after which every world warped to
+drew black in Chrome, though each warp reached its map. tools/shader_survey.js's warp now waits for such a change to
+end."""
 import json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -33,6 +41,12 @@ for step in LOOK:
 def visit(m):
     return [["eval", f"warp(0x{m:X})"], ["wait", 4000], *LOOK]
 
+PLAY_LOOK = [key("ArrowLeft", 37, 2000), ["hold", "Space", " ", 32, 200], ["wait", 1200],
+             ["hold", "ShiftLeft", "Shift", 16, 200], ["wait", 1000], key("ArrowRight", 39, 2000), ["wait", 1500]]
+
+def play_visit(m):
+    return [["eval", f"warp(0x{m:X})"], ["wait", 4000], *PLAY_LOOK]
+
 LOAD = [["until", "Device Name", 30000], ["wait", 9000]]
 SETUP = [["rom", 1042, 478], ["wait", 4000]]
 START = [["click", 1042, 478], ["wait", 25000],
@@ -52,10 +66,11 @@ shader_plan = {
 play_plan = {
     "header": [
         "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py: the boot as",
-        "the shader plan's, then the first map of every world in turn."],
+        "the shader plan's, then the first map of every world in turn, Banjo jumping and attacking where he lands in each",
+        "while the camera turns (make_plans.py's docstring says why he doesn't walk)."],
     "page": "BanjoTooieRecompiled.html",
     "load": LOAD, "setup": SETUP, "start": START,
-    "play": [s for _, _, maps in WORLDS for s in visit(maps[0])],
+    "play": [s for _, _, maps in WORLDS for s in play_visit(maps[0])],
 }
 for name, plan in (("shader_plan.json", shader_plan), ("play_plan.json", play_plan)):
     with open(os.path.join(HERE, name), "w", newline="\n") as f:

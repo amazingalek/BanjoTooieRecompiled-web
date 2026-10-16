@@ -1,7 +1,8 @@
 {
  "header": [
   "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py: the boot as",
-  "the shader plan's, then the first map of every world in turn."
+  "the shader plan's, then the first map of every world in turn, Banjo jumping and attacking where he lands in each",
+  "while the camera turns (make_plans.py's docstring says why he doesn't walk)."
  ],
  "page": "BanjoTooieRecompiled.html",
  "load": [
@@ -89,10 +90,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -122,10 +138,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -155,10 +186,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -188,10 +234,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -221,10 +282,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -254,10 +330,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -287,10 +378,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -320,10 +426,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -353,10 +474,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",
@@ -386,10 +522,25 @@
   ],
   [
    "hold",
-   "KeyW",
-   "w",
-   87,
-   2500
+   "Space",
+   " ",
+   32,
+   200
+  ],
+  [
+   "wait",
+   1200
+  ],
+  [
+   "hold",
+   "ShiftLeft",
+   "Shift",
+   16,
+   200
+  ],
+  [
+   "wait",
+   1000
   ],
   [
    "hold",

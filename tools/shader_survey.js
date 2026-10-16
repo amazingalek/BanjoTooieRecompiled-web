@@ -7,7 +7,8 @@
 //   +0x16, +0x17 and +0x18 cleared, then +0x12 set to 1, the request itself.
 //
 // The map the game is on is the halfword at 0x80132DC2 (func_800EA05C gives it), and the byte at 0x801275C0 is set while
-// a change is under way (gcgoto_entrypoint_14), which the game's own requests also set. warp(map, exit) resolves once that has changed to the map asked
+// a change is under way (gcgoto_entrypoint_14), which the game's own requests also set. warp first waits for one the game
+// began itself to end (up to 15 s): cut in during its fade, the fade stayed black. warp(map, exit) resolves once that has changed to the map asked
 // for, or with false after 30 s; map() gives it, and waitMap(id, ms) waits for one. RDRAM is found as page_driver.mjs's
 // n64r finds it; bytes and halfwords sit at the address XOR 3 and XOR 2 in its little-endian words.
 (() => {
@@ -35,6 +36,7 @@
     return false;
   };
   window.warp = async (id, exit = 0) => {
+    for (let t = 0; t < 15000 && r8(0x801275C0); t += 100) await sleep(100);
     w16(MAP + 0x10, id);
     w8(MAP + 0x13, exit);
     w8(MAP + 0x16, 0);
