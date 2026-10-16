@@ -106,6 +106,14 @@ opening, then the first map of every world, about 12 s each) with N64Recomp-brow
   and drew 57.8; at 3840x2000 (`--play 25`) Chrome waited 1.7 s and drew 59.6, Firefox 3.8 s and 59.2. No sound short,
   no WebGPU errors.
 
+Played on N64Recomp-browser v0.50.0 (main 0afb26f built with its pin moved there, served locally) on 2026-10-16, RTX
+2070, a fresh profile each, one page at a time, a quiet host, by `tools/play_plan.json` with `play_page.mjs`: at
+1256x645 headless Chrome 155 waited 1.4 s and drew 55.2 presents a second (median; headless Chrome drew about 56 frames
+a second that night: four games played from Pages beside their builds, as a control, read 54.8-55.6 too), Firefox 158
+waited 7.3 s and drew 58.0, both at the game's own rate in the later worlds as before; uncapped at 3840x2000
+(`--uncapped --play 25`, the first such run) Chrome drew 335.1 after 1.4 s and Firefox 123.6 after 4.1 s. No sound short
+and no WebGPU errors.
+
 Render to RAM is off on the page: on, the same 200 s in Jinjo Village and Terrydactyland drew 48.6 presents a second
 with the sound about 10,000 frames short, against 59.0 and none off (headless Chrome 155). With it off, RT64 made every
 tile copy a new texture until rt64-web 8bea892: the game makes 4 a frame, and the page had 16,690 textures and 2.7 GB
