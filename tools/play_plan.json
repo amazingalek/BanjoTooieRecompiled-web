@@ -2,7 +2,9 @@
  "header": [
   "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py: the boot as",
   "the shader plan's, then the first map of every world in turn, Banjo jumping and attacking where he lands in each",
-  "while the camera turns (make_plans.py's docstring says why he doesn't walk)."
+  "while the camera turns (make_plans.py's docstring says why he doesn't walk). Its waits and holds there are on the",
+  "game's own clock, the seconds it adds each frame's length to (the block at 0x80127630's +8, read in 60ths), so every",
+  "browser plays as much of each world whatever frames it gives the game; the last step reads where Banjo is."
  ],
  "page": "BanjoTooieRecompiled.html",
  "load": [
@@ -73,6 +75,11 @@
   ]
  ],
  "play": [
+  [
+   "clock",
+   "Math.round(new Float32Array(new Uint32Array([n64r(0x80127638)]).buffer)[0] * 60)",
+   60
+  ],
   [
    "eval",
    "warp(0x142)"
@@ -552,6 +559,10 @@
   [
    "wait",
    1500
+  ],
+  [
+   "eval",
+   "(() => { const f = (a) => new Float32Array(new Uint32Array([n64r(a)]).buffer)[0]; const v = n64r(n64r(0x80135490 + 4 * n64r(0x801354DC)) + 0xE4); return [0, 4, 8].map((i) => Math.round(f(v + i))); })()"
   ]
  ]
 }

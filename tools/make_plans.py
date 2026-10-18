@@ -58,6 +58,12 @@ def visit(m):
 PLAY_LOOK = [key("ArrowLeft", 37, 2000), ["hold", "Space", " ", 32, 200], ["wait", 1200],
              ["hold", "ShiftLeft", "Shift", 16, 200], ["wait", 1000], key("ArrowRight", 39, 2000), ["wait", 1500]]
 
+# The game's own time for the play's waits and holds, and where the player is at its end (the player's state, from the
+# table at 0x80135490 by the player's index, points at the position at +0xE4).
+CLOCK = ["clock", "Math.round(new Float32Array(new Uint32Array([n64r(0x80127638)]).buffer)[0] * 60)", 60]
+WHERE = ["eval", "(() => { const f = (a) => new Float32Array(new Uint32Array([n64r(a)]).buffer)[0]; const v = n64r(n64r(0x80135490 + 4 * n64r(0x801354DC)) + 0xE4); "
+                 "return [0, 4, 8].map((i) => Math.round(f(v + i))); })()"]
+
 def play_visit(m):
     return [["eval", f"warp(0x{m:X})"], ["wait", 4000], *PLAY_LOOK]
 
@@ -109,10 +115,12 @@ play_plan = {
     "header": [
         "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py: the boot as",
         "the shader plan's, then the first map of every world in turn, Banjo jumping and attacking where he lands in each",
-        "while the camera turns (make_plans.py's docstring says why he doesn't walk)."],
+        "while the camera turns (make_plans.py's docstring says why he doesn't walk). Its waits and holds there are on the",
+        "game's own clock, the seconds it adds each frame's length to (the block at 0x80127630's +8, read in 60ths), so every",
+        "browser plays as much of each world whatever frames it gives the game; the last step reads where Banjo is."],
     "page": "BanjoTooieRecompiled.html",
     "load": LOAD, "setup": SETUP, "start": START,
-    "play": [s for _, _, maps in WORLDS for s in play_visit(maps[0])],
+    "play": [CLOCK, *[s for _, _, maps in WORLDS for s in play_visit(maps[0])], WHERE],
 }
 for name, plan in (("shader_plan.json", shader_plan), ("play_plan.json", play_plan)):
     with open(os.path.join(HERE, name), "w", newline="\n") as f:
