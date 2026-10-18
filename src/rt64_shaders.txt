@@ -12,8 +12,12 @@
 # world, its maps reached by tools/shader_survey.js (make_plans.py lists them), the camera turned and Banjo walked a few
 # steps on each: Isle o' Hags (Jinjo Village and eight more of its maps), Mayahem Temple, Glitter Gulch Mine,
 # Witchyworld, Jolly Roger's Lagoon, Terrydactyland, Grunty Industries, Hailfire Peaks, Cloud Cuckooland and Cauldron
-# Keep (two to four maps each, the first where a player enters it). Not played: the worlds' other rooms, bosses,
-# minigames, multiplayer, cutscenes but the opening, and transformations.
+# Keep (two to four maps each, the first where a player enters it). Then, a load each, rooms further in, played about
+# 25 s each (walking out and back, jumps, attacks, eggs, the camera turned), into their worlds' sections: Targitzan's
+# chamber and a temple room, Chuffy's boiler (Old King Coal), Davy Jones' Locker, Terry's nest and a cavern, the
+# Repair Depot (Weldar) and a floor of the factory, Mingy Jongo's skull, and Cauldron Keep's Tower of Tragedy quiz and
+# the ending's Well Done map, watched. Not played: the worlds' other rooms, the other bosses, minigames, multiplayer,
+# cutscenes but the opening, and transformations.
 0f0a4000 0098ac3f fc129804 3f15ffff 088a000e
 0c184240 00982c3f fc129804 3f15ffff 0ccb540e
 0f0a4000 00982c3f fc62fe04 3f15f9ff 0800000e
@@ -175,6 +179,7 @@ section mayahem
 00504a50 00882c3f fc309661 552eff7f 0ccb540a
 0c1841f8 00982c3f fc62fe04 3f15f9ff 0800000a
 0c1841f8 0098ac3f fc129804 3f15ffff 0803540e
+0c184a40 00902c3f fc117e03 ff0ff3ff 0ccf540b
 section glitter
 0c192078 0099ac3f fc129804 3f15ffff 199b100e
 0c192078 0099ac3f fc62fe04 3f15f9ff 1999540e
@@ -233,6 +238,7 @@ section glitter
 0f0a4030 00992c3f fc129804 3f15ffff 199b100e
 0c1841f8 0099ac3f fc129804 3f15ffff 1ccb540a
 0c1841f9 0099ac3f fc129804 3f15ffff 1ccb540e
+0c184e50 0098ac3f fc129804 3f15ffff 099b100e
 section witchy
 0f0a4000 0098ac3f fc129804 3f15ffff 0ccb540e
 0f0a4030 00992c3f fc62fe04 3f15f9ff 1cc9540e
@@ -356,6 +362,23 @@ section jolly
 0f0a4030 0098ac3f fc129804 3f15ffff 0bba440e
 0c184e50 0098ac3f fc129804 3f15ffff 0bba440e
 0c184270 0098ac3f fc129804 3f15ffff 088a000e
+cb024030 0098ac3f fc129604 3f15ffff 0ccb540e
+cb024030 0098ac3f fc129604 3f15ffff 088a000e
+cb024030 0098ac3f fc62fe04 3f15f7ff 0800000e
+cb024030 00982c3f fc62fe04 3f15f7ff 0800000a
+cb024030 00982c3f fc129604 3f15ffff 088a000e
+cb024030 00982c3f fc129604 3f15ffff 0ccb540e
+c8104e50 00982c3f fc129604 3f15ffff 088a000e
+c8112078 00982c3f fc129604 3f15ffff 088a000e
+c8104dd8 00982c3f fc129604 3f15ffff 088a000e
+c8112078 0098ac3f fc129604 3f15ffff 0ccb540e
+c8112078 0098ac3f fc129604 3f15ffff 088a000e
+c8112078 00982c3f fc62fe04 3f15f7ff 0800000e
+c81041f8 00982c3f fc62fe04 3f15f7ff 0800000e
+c8112078 0098ac3f fc129604 3f15ffff 088a000a
+c8112078 00982c3f fc129604 3f15ffff 0ccb540e
+c81041f8 0099ac3f fc269604 1f14ffff 188e000e
+0c1841d8 00982c3f fc129804 3f15ffff 088a000e
 section terry
 0c184e50 0099ac3f fc129804 3f15ffff 199b100e
 0f0a4030 00992c3f fc62fe04 3f15f9ff 1999540e
@@ -394,6 +417,10 @@ section terry
 0c184a40 00902c3f fc117e03 ff0ff3ff 04cf540b
 00504250 00882c3f fc309661 552eff7f 0ccb540a
 00504a50 00882c3f fc309661 552eff7f 0ccb540a
+0f0a4010 0098ac3f fc129804 3f15ffff 088a000e
+0c184e50 0099ac3f fc269804 1f14ffff 188e000a
+0c184e50 0099ac3f fc129804 3f15ffff 1ccb540a
+0f0a4030 0099ac3f fc269804 1f14ffff 188e000a
 section grunty
 0f0a4000 0099ac3f fc269804 1f14ffff 188e000e
 0c184240 00992c3f fc62fe04 3f15f9ff 1cc9540e
@@ -452,6 +479,7 @@ section grunty
 0c1841f8 0099ac3f fc129804 3f15ffff 1ccb540e
 0c1841f8 00992c3f fc269804 1f14ffff 188e000e
 0c1841f8 0099ac3f fc129804 3f15ffff 188a000e
+0c1841f8 0099ac3f fc62fe04 3f15f9ff 1cc9540e
 section hailfire
 0c184e50 0099ac3f fc129804 3f15ffff 1bba440e
 0f0a4030 00992c3f fc62fe04 3f15f9ff 1bb9540e
@@ -566,6 +594,7 @@ section cloud
 0f0a4030 0098ac3f fc129804 3f15ffff 0bba440e
 0c184dd8 0098ac3f fc129804 3f15ffff 0ccb540e
 0c184a40 00902c3f fc117e03 ff0ff3ff 04cf540b
+0c192078 00992c3f fc62fe04 3f15f9ff 1889540a
 section cauldron
 0f0a4030 00992c3f fc62fe04 3f15f9ff 1889540e
 0f0a4030 0099ac3f fc129804 3f15ffff 1bba440e
@@ -588,3 +617,7 @@ section cauldron
 0c184e50 00982c3f fc62fe04 3f15f9ff 0800000e
 0c184e50 00982c3f fc129804 3f15ffff 0ccb540e
 0c184a40 00100c3f fcff9403 ff0cffff 04cf540b
+0c184271 00992c3f fc269804 1f14ffff 188e000a
+0c184271 0098ac3f fc129804 3f15ffff 088a000e
+0c184271 0098ac3f fc129804 3f15ffff 088a000a
+00504a50 0088acff fc309661 552eff7f 0ccb540a

@@ -64,7 +64,9 @@ list missed is built behind the game, and the page remembers it and builds it wi
 
 The list is recorded by code, not by hand: `tools/shader_plan.json` (written by `tools/make_plans.py`) is a plan for
 N64Recomp-browser's `tools/record_shaders.mjs`, which boots the page, starts a new game and, for each section, sends
-Banjo to the maps of one world with `tools/shader_survey.js`, looking around on each. That script needs no change to
+Banjo to the maps of one world with `tools/shader_survey.js`, looking around on each; then, a load each, to a world's
+boss room or a room further in (`FURTHER` in `make_plans.py`), played about 25 s, which records into that world's
+section. That script needs no change to
 the game: a map change is a request the game's own code leaves in RAM, and the survey leaves the same one (its header
 says where). To record again:
 

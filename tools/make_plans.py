@@ -3,7 +3,8 @@
 play_page.mjs follow (src/rt64_shaders.txt's header says how the list was recorded with the first). Both reach the game the
 same way: the launcher, Start Game, the title for 25 s, Start (Enter) to the file select, A (Space) on Game 1, which on a
 new profile starts a new game, and its opening cutscene; then tools/shader_survey.js warps to each world's maps, and in each
-the camera turns (the C buttons, the arrow keys) and Banjo walks (W) for a few seconds. Run it again after changing WORLDS.
+the camera turns (the C buttons, the arrow keys) and Banjo walks (W) for a few seconds, and in each room of FURTHER,
+further in, he walks out and back, jumps, attacks and shoots for about 25 s. Run it again after changing WORLDS or FURTHER.
 
 The play plan doesn't walk: in each world Banjo jumps and attacks where he lands while the camera turns. A blind walk
 from an entrance, which way the entrance faces unknown, carried him off Hailfire Peaks' and Cloud Cuckooland's ledges,
@@ -30,6 +31,19 @@ WORLDS = [
     ("cauldron", "Cauldron Keep", [0x15D, 0x15E]),
 ]
 
+# Further in, a load each that records into its world's section: boss rooms and rooms where a long play met shaders
+# the worlds' first maps don't draw, by map and entrance, each played for that many BLOCKs (a negative number is how
+# many ms it is watched instead: Cauldron Keep's quiz, and the ending's Well Done map, which comes after it).
+FURTHER = [
+    ("mayahem", [(0x17A, 1, 1), (0xBA, 1, 1)]),                 # Targitzan's chamber, a temple room
+    ("glitter", [(0xD1, 1, 1)]),                                # Chuffy's boiler, Old King Coal
+    ("jolly", [(0xFC, 1, 1)]),                                  # Davy Jones' Locker
+    ("terry", [(0x113, 5, 1), (0x11B, 1, 1)]),                  # Terry's nest, a cavern
+    ("grunty", [(0x110, 1, 1), (0x108, 1, 1)]),                 # the Repair Depot (Weldar), a floor
+    ("cloud", [(0x13F, 1, 1)]),                                 # Mingy Jongo's skull
+    ("cauldron", [(0x15F, 1, -20000), (0x191, 1, -30000)]),     # the Tower of Tragedy quiz, Well Done
+]
+
 def key(name, code, ms):
     return ["hold", name, name if len(name) > 1 else name.lower(), code, ms]
 
@@ -47,6 +61,32 @@ PLAY_LOOK = [key("ArrowLeft", 37, 2000), ["hold", "Space", " ", 32, 200], ["wait
 def play_visit(m):
     return [["eval", f"warp(0x{m:X})"], ["wait", 4000], *PLAY_LOOK]
 
+# About 25 s of walking out and back about where Banjo lands, jumps, attacks, eggs (Z, which is Q, with C-down), Z
+# with B and the camera turned: a long play's input, which played every map in FURTHER without leaving it.
+def hold(code, k, kc, ms):
+    return ["hold", code, k, kc, ms]
+
+def W(ms): return hold("KeyW", "w", 87, ms)
+def S(ms): return hold("KeyS", "s", 83, ms)
+def A(ms): return hold("KeyA", "a", 65, ms)
+def D(ms): return hold("KeyD", "d", 68, ms)
+def L(ms): return hold("ArrowLeft", "ArrowLeft", 37, ms)
+def R(ms): return hold("ArrowRight", "ArrowRight", 39, ms)
+JUMP, B, CDOWN, Z = (hold("Space", " ", 32, 200), hold("ShiftLeft", "Shift", 16, 200),
+                     hold("ArrowDown", "ArrowDown", 40, 200), hold("KeyQ", "q", 81, 200))
+Z_DOWN, Z_UP = ["down", "KeyQ", "q", 81], ["up", "KeyQ", "q", 81]
+BLOCK = [W(1200), S(1200), JUMP, ["wait", 1000], B, ["wait", 800], L(1000),
+         D(700), A(700), Z_DOWN, CDOWN, ["wait", 400], CDOWN, Z_UP, ["wait", 700],
+         JUMP, ["wait", 300], Z, ["wait", 1300], R(1000),
+         S(1000), W(1000), B, ["wait", 500], B, ["wait", 800],
+         Z_DOWN, B, Z_UP, ["wait", 1200], JUMP, ["wait", 250], JUMP, ["wait", 1200],
+         A(600), D(600), L(800), R(800), ["wait", 1500]]
+
+def further(m, entrance, blocks):
+    if blocks < 0:
+        return [["eval", f"warp(0x{m:X}, {entrance})"], ["wait", -blocks]]
+    return [["eval", f"warp(0x{m:X}, {entrance})"], ["wait", 3500], *BLOCK * blocks]
+
 LOAD = [["until", "Device Name", 30000], ["wait", 9000]]
 SETUP = [["rom", 1042, 478], ["wait", 4000]]
 START = [["click", 1042, 478], ["wait", 25000],
@@ -58,10 +98,12 @@ shader_plan = {
     "header": [
         "Banjo-Tooie's shader plan for N64Recomp-browser's tools/record_shaders.mjs, written by tools/make_plans.py (its",
         "docstring says how it plays): the boot is the launcher, the logos, the title, the file select and a new game's",
-        "opening; each section after it a world, its maps reached by tools/shader_survey.js."],
+        "opening; each section after it a world, its maps reached by tools/shader_survey.js; then a load each for rooms",
+        "further in (FURTHER), played longer, which go into their worlds' sections."],
     "page": "BanjoTooieRecompiled.html",
     "load": LOAD, "setup": SETUP, "start": START,
-    "sections": [{"name": name, "steps": [s for m in maps for s in visit(m)]} for name, _, maps in WORLDS],
+    "sections": [{"name": name, "steps": [s for m in maps for s in visit(m)]} for name, _, maps in WORLDS] +
+                [{"name": name, "steps": [s for m in maps for s in further(*m)]} for name, maps in FURTHER],
 }
 play_plan = {
     "header": [
