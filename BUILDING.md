@@ -92,6 +92,13 @@ a second in both browsers: the game's own rate there, which the desktop build sh
 there, while the GPU is 30-39% busy, so RT64 paces its presents to them (`presents paced to the game's frames`), one a
 game frame, 12-14 a second in Hailfire Peaks.
 
+The game draws about 1,700 batches a frame in Jinjo Village, 3-7 times Rush 2049's, and RT64 makes each one WebGPU
+calls on the page's thread: a draw, its push constants and a bind group, and a texture set and pipeline where they
+change, as the desktop build does. In Chrome with the CPU throttled 6 times (an RTX 5080, uncapped) that thread is 92%
+busy with them and the page draws 72-93 presents a second, the slowest of the pages there; Firefox and an unthrottled
+Chrome play it like the others. That is the game's draw count, not the web support's: N64Recomp-browser's
+docs/findings.md (A page's thread in Chrome, throttled) has the trace and the counts.
+
 In Firefox the first load's wasm fetch is cut off by `coi_serviceworker.js`'s reload, which the console shows as an
 exception.
 
