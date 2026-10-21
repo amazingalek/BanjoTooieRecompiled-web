@@ -18,6 +18,8 @@
 # Repair Depot (Weldar) and a floor of the factory, Mingy Jongo's skull, and Cauldron Keep's Tower of Tragedy quiz and
 # the ending's Well Done map, watched. Not played: the worlds' other rooms, the other bosses, minigames, multiplayer,
 # cutscenes but the opening, and transformations.
+# The boot's last three and grunty's last one are what tools/play_plan_extended.json drew beyond the list, the boot's in a
+# Firefox run before its first warp, grunty's on a floor of Grunty Industries in Chrome.
 0f0a4000 0098ac3f fc129804 3f15ffff 088a000e
 0c184240 00982c3f fc129804 3f15ffff 0ccb540e
 0f0a4000 00982c3f fc62fe04 3f15f9ff 0800000e
@@ -92,6 +94,9 @@ f5504340 00082c3f fcffffff ffffffff 0800000b
 0c184251 0098ac3f fc129804 3f15ffff 0ccb540a
 0c184a40 00102c3f fc117e03 ff0ff3ff 04cf540b
 0c184a40 00102c3f fc117e03 ff0ff3ff 0ccf540b
+0c1841d9 00982c3f fc129804 3f15ffff 0ccb540e
+0c1841d9 0098ac3f fc129804 3f15ffff 0ccb540e
+00504a71 00882c3f fc309661 552eff7f 0ccb540a
 section isle
 0c1841f9 00982c3f fc129804 3f15ffff 0ccb540e
 0c1841f8 00982c3f fc129804 3f15ffff 0ccb540a
@@ -480,6 +485,7 @@ section grunty
 0c1841f8 00992c3f fc269804 1f14ffff 188e000e
 0c1841f8 0099ac3f fc129804 3f15ffff 188a000e
 0c1841f8 0099ac3f fc62fe04 3f15f9ff 1cc9540e
+0c1841f8 00982c3f fc1299ff 3f15fe3f 0ccb540e
 section hailfire
 0c184e50 0099ac3f fc129804 3f15ffff 1bba440e
 0f0a4030 00992c3f fc62fe04 3f15f9ff 1bb9540e

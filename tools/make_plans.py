@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Writes tools/shader_plan.json and tools/play_plan.json, the plans N64Recomp-browser's tools/record_shaders.mjs and
-play_page.mjs follow (src/rt64_shaders.txt's header says how the list was recorded with the first). Both reach the game the
+"""Writes tools/shader_plan.json, tools/play_plan.json and tools/play_plan_extended.json, the plans N64Recomp-browser's
+tools/record_shaders.mjs and play_page.mjs follow (src/rt64_shaders.txt's header says how the list was recorded with the first). Both reach the game the
 same way: the launcher, Start Game, the title for 25 s, Start (Enter) to the file select, A (Space) on Game 1, which on a
 new profile starts a new game, and its opening cutscene; then tools/shader_survey.js warps to each world's maps, and in each
 the camera turns (the C buttons, the arrow keys) and Banjo walks (W) for a few seconds, and in each room of FURTHER,
 further in, he walks out and back, jumps, attacks and shoots for about 25 s. Run it again after changing WORLDS or FURTHER.
 
-The play plan doesn't walk: in each world Banjo jumps and attacks where he lands while the camera turns. A blind walk
+The play plan, the page's regular play, visits four worlds' first maps (PLAY_WORLDS) and doesn't walk there: in each
+Banjo jumps and attacks where he lands while the camera turns, under 3 minutes with every wait's timeout. The extended
+plan, for when a longer play is needed, plays three rooms of FURTHER (PLAY_FURTHER) after them with the long play's
+walk out and back, about 3 minutes in all and under 5 with every wait's timeout. A blind walk
 from an entrance, which way the entrance faces unknown, carried him off Hailfire Peaks' and Cloud Cuckooland's ledges,
 or through a world's exit: a laptop's three runs of a 2.5 s walk ended black after Cauldron Keep's, which the page
 draws in Chrome and Firefox at 1256x645 and 1920x945, Chrome's page thread throttled 3 times too, and with a walk out and
@@ -64,8 +67,9 @@ CLOCK = ["clock", "Math.round(new Float32Array(new Uint32Array([n64r(0x80127638)
 WHERE = ["eval", "(() => { const f = (a) => new Float32Array(new Uint32Array([n64r(a)]).buffer)[0]; const v = n64r(n64r(0x80135490 + 4 * n64r(0x801354DC)) + 0xE4); "
                  "return [0, 4, 8].map((i) => Math.round(f(v + i))); })()"]
 
-def play_visit(m):
-    return [["eval", f"warp(0x{m:X})"], ["wait", 4000], *PLAY_LOOK]
+# Each warp of the play plan is a need: a run whose warp never reaches its map fails there.
+def play_visit(name, m):
+    return [["need", f"warp(0x{m:X})"], ["wait", 4000], *PLAY_LOOK[:3], ["shot", f"{name}.png"], *PLAY_LOOK[3:]]
 
 # About 25 s of walking out and back about where Banjo lands, jumps, attacks, eggs (Z, which is Q, with C-down), Z
 # with B and the camera turned: a long play's input, which played every map in FURTHER without leaving it.
@@ -93,12 +97,32 @@ def further(m, entrance, blocks):
         return [["eval", f"warp(0x{m:X}, {entrance})"], ["wait", -blocks]]
     return [["eval", f"warp(0x{m:X}, {entrance})"], ["wait", 3500], *BLOCK * blocks]
 
+# The worlds whose first maps the play plan visits, about 12 s each: the hub, a mine, a fair and fire and ice, none of
+# them the worlds PLAY_FURTHER goes into.
+PLAY_WORLDS = ["isle", "glitter", "witchy", "hailfire"]
+
+# After the worlds the play plan plays rooms of FURTHER the worlds' first maps never reach, each for one BLOCK, about
+# 25 s, by map and entrance: under water, a cavern and a factory floor, none a boss's room.
+PLAY_FURTHER = [("davy-jones-locker", 0xFC, 1), ("terrydactyland-cavern", 0x11B, 1), ("grunty-industries-floor", 0x108, 1)]
+
+def play_further(name, m, entrance):
+    return [["need", f"warp(0x{m:X}, {entrance})"], ["wait", 3500], *BLOCK[:6], ["shot", f"{name}.png"], *BLOCK[6:],
+            ["wait", 1500]]
+
 LOAD = [["until", "Device Name", 30000], ["wait", 9000]]
+# The play plan's Load ROM waits for the shader list Chrome builds behind the launcher (a click while it builds can be
+# lost), or for Firefox's line that it builds none there. Its timeouts are what runs needed, with room: the device
+# came in seconds, the list in under a minute.
+PLAY_LOAD = [["until", "Device Name", 20000], ["until", r"RT64: all \d+ prebuilt shaders built|once the game draws", 60000],
+             LOAD[1]]
+# The regular plan's: the list's line alone (it comes after the device's), and less time for it.
+REGULAR_LOAD = [PLAY_LOAD[1][:2] + [45000], LOAD[1]]
 SETUP = [["rom", 1042, 478], ["wait", 4000]]
 START = [["click", 1042, 478], ["wait", 25000],
          ["hold", "Enter", "Enter", 13, 300], ["wait", 5000],
          ["hold", "Space", " ", 32, 300], ["wait", 4000],
          ["evalFile", "shader_survey.js"], ["eval", "waitMap(0xA1, 30000)"], ["wait", 4000]]
+PLAY_START = [s if s != ["eval", "waitMap(0xA1, 30000)"] else ["eval", "waitMap(0xA1, 15000)"] for s in START]
 
 shader_plan = {
     "header": [
@@ -113,16 +137,41 @@ shader_plan = {
 }
 play_plan = {
     "header": [
-        "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py: the boot as",
-        "the shader plan's, then the first map of every world in turn, Banjo jumping and attacking where he lands in each",
-        "while the camera turns (make_plans.py's docstring says why he doesn't walk). Its waits and holds there are on the",
-        "game's own clock, the seconds it adds each frame's length to (the block at 0x80127630's +8, read in 60ths), so every",
-        "browser plays as much of each world whatever frames it gives the game; the last step reads where Banjo is."],
+        "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py, its regular",
+        "play of 2-3 minutes: the boot as the shader plan's, Load ROM once the shader list Chrome builds behind the",
+        "launcher is done (Firefox builds none there, and its line saying so is the one waited for); then the first map of",
+        "four worlds, Isle o' Hags, Glitter Gulch Mine, Witchyworld and Hailfire Peaks, about 12 s each of Banjo jumping and",
+        "attacking where he lands while the camera turns (make_plans.py's docstring says why he doesn't walk). Every place",
+        "is reached by tools/shader_survey.js's warp, the request the game's own code leaves for a map change, each a need",
+        "that fails the run unless the map asked for is the one playing, and has a shot about 8 s in. Its waits and holds",
+        "there are on the game's own clock, the seconds it adds each frame's length to (the block at 0x80127630's +8, read",
+        "in 60ths), so every browser plays as much of each place whatever frames it gives the game; the last step reads",
+        "where Banjo is. tools/play_plan_extended.json goes on to three rooms further in, for when a longer play is needed."],
     "page": "BanjoTooieRecompiled.html",
-    "load": LOAD, "setup": SETUP, "start": START,
-    "play": [CLOCK, *[s for _, _, maps in WORLDS for s in play_visit(maps[0])], WHERE],
+    "load": REGULAR_LOAD, "setup": SETUP, "start": PLAY_START,
+    "play": [CLOCK, *[s for name, _, maps in WORLDS if name in PLAY_WORLDS for s in play_visit(name, maps[0])], WHERE],
 }
-for name, plan in (("shader_plan.json", shader_plan), ("play_plan.json", play_plan)):
+extended_plan = {
+    "header": [
+        "Banjo-Tooie's extended play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py, at",
+        "most 5 minutes, for when a longer play than the regular one (tools/play_plan.json) is needed: the boot as the",
+        "shader plan's, Load ROM once the shader list Chrome builds behind the launcher is done (Firefox builds none",
+        "there, and its line saying so is the one waited for); then the first map of four worlds, Isle o' Hags, Glitter",
+        "Gulch Mine, Witchyworld and Hailfire Peaks, about 12 s each of Banjo jumping and attacking where he lands while",
+        "the camera turns (make_plans.py's docstring says why he doesn't walk); then three rooms further in, about 25 s",
+        "each of walking out and back about where he lands, jumps, attacks, eggs and the camera turned: Davy Jones' Locker",
+        "under Jolly Roger's Lagoon, a Terrydactyland cavern and a floor of Grunty Industries. Every place is reached by",
+        "tools/shader_survey.js's warp, the request the game's own code leaves for a map change, each a need that fails",
+        "the run unless the map asked for is the one playing, and has a shot about 8 s in. Its waits and holds there are on",
+        "the game's own clock, the seconds it adds each frame's length to (the block at 0x80127630's +8, read in 60ths), so",
+        "every browser plays as much of each place whatever frames it gives the game; the last step reads where Banjo is."],
+    "page": "BanjoTooieRecompiled.html",
+    "load": PLAY_LOAD, "setup": SETUP, "start": PLAY_START,
+    "play": [CLOCK, *[s for name, _, maps in WORLDS if name in PLAY_WORLDS for s in play_visit(name, maps[0])],
+             *[s for f in PLAY_FURTHER for s in play_further(*f)], WHERE],
+}
+for name, plan in (("shader_plan.json", shader_plan), ("play_plan.json", play_plan),
+                   ("play_plan_extended.json", extended_plan)):
     with open(os.path.join(HERE, name), "w", newline="\n") as f:
         json.dump(plan, f, indent=1)
         f.write("\n")

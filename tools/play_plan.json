@@ -1,17 +1,22 @@
 {
  "header": [
-  "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py: the boot as",
-  "the shader plan's, then the first map of every world in turn, Banjo jumping and attacking where he lands in each",
-  "while the camera turns (make_plans.py's docstring says why he doesn't walk). Its waits and holds there are on the",
-  "game's own clock, the seconds it adds each frame's length to (the block at 0x80127630's +8, read in 60ths), so every",
-  "browser plays as much of each world whatever frames it gives the game; the last step reads where Banjo is."
+  "Banjo-Tooie's play plan for N64Recomp-browser's tools/play_page.mjs, written by tools/make_plans.py, its regular",
+  "play of 2-3 minutes: the boot as the shader plan's, Load ROM once the shader list Chrome builds behind the",
+  "launcher is done (Firefox builds none there, and its line saying so is the one waited for); then the first map of",
+  "four worlds, Isle o' Hags, Glitter Gulch Mine, Witchyworld and Hailfire Peaks, about 12 s each of Banjo jumping and",
+  "attacking where he lands while the camera turns (make_plans.py's docstring says why he doesn't walk). Every place",
+  "is reached by tools/shader_survey.js's warp, the request the game's own code leaves for a map change, each a need",
+  "that fails the run unless the map asked for is the one playing, and has a shot about 8 s in. Its waits and holds",
+  "there are on the game's own clock, the seconds it adds each frame's length to (the block at 0x80127630's +8, read",
+  "in 60ths), so every browser plays as much of each place whatever frames it gives the game; the last step reads",
+  "where Banjo is. tools/play_plan_extended.json goes on to three rooms further in, for when a longer play is needed."
  ],
  "page": "BanjoTooieRecompiled.html",
  "load": [
   [
    "until",
-   "Device Name",
-   30000
+   "RT64: all \\d+ prebuilt shaders built|once the game draws",
+   45000
   ],
   [
    "wait",
@@ -67,7 +72,7 @@
   ],
   [
    "eval",
-   "waitMap(0xA1, 30000)"
+   "waitMap(0xA1, 15000)"
   ],
   [
    "wait",
@@ -81,7 +86,7 @@
    60
   ],
   [
-   "eval",
+   "need",
    "warp(0x142)"
   ],
   [
@@ -107,52 +112,8 @@
    1200
   ],
   [
-   "hold",
-   "ShiftLeft",
-   "Shift",
-   16,
-   200
-  ],
-  [
-   "wait",
-   1000
-  ],
-  [
-   "hold",
-   "ArrowRight",
-   "ArrowRight",
-   39,
-   2000
-  ],
-  [
-   "wait",
-   1500
-  ],
-  [
-   "eval",
-   "warp(0xB8)"
-  ],
-  [
-   "wait",
-   4000
-  ],
-  [
-   "hold",
-   "ArrowLeft",
-   "ArrowLeft",
-   37,
-   2000
-  ],
-  [
-   "hold",
-   "Space",
-   " ",
-   32,
-   200
-  ],
-  [
-   "wait",
-   1200
+   "shot",
+   "isle.png"
   ],
   [
    "hold",
@@ -177,7 +138,7 @@
    1500
   ],
   [
-   "eval",
+   "need",
    "warp(0xC7)"
   ],
   [
@@ -203,6 +164,10 @@
    1200
   ],
   [
+   "shot",
+   "glitter.png"
+  ],
+  [
    "hold",
    "ShiftLeft",
    "Shift",
@@ -225,7 +190,7 @@
    1500
   ],
   [
-   "eval",
+   "need",
    "warp(0xD6)"
   ],
   [
@@ -251,52 +216,8 @@
    1200
   ],
   [
-   "hold",
-   "ShiftLeft",
-   "Shift",
-   16,
-   200
-  ],
-  [
-   "wait",
-   1000
-  ],
-  [
-   "hold",
-   "ArrowRight",
-   "ArrowRight",
-   39,
-   2000
-  ],
-  [
-   "wait",
-   1500
-  ],
-  [
-   "eval",
-   "warp(0x1A7)"
-  ],
-  [
-   "wait",
-   4000
-  ],
-  [
-   "hold",
-   "ArrowLeft",
-   "ArrowLeft",
-   37,
-   2000
-  ],
-  [
-   "hold",
-   "Space",
-   " ",
-   32,
-   200
-  ],
-  [
-   "wait",
-   1200
+   "shot",
+   "witchy.png"
   ],
   [
    "hold",
@@ -321,103 +242,7 @@
    1500
   ],
   [
-   "eval",
-   "warp(0x112)"
-  ],
-  [
-   "wait",
-   4000
-  ],
-  [
-   "hold",
-   "ArrowLeft",
-   "ArrowLeft",
-   37,
-   2000
-  ],
-  [
-   "hold",
-   "Space",
-   " ",
-   32,
-   200
-  ],
-  [
-   "wait",
-   1200
-  ],
-  [
-   "hold",
-   "ShiftLeft",
-   "Shift",
-   16,
-   200
-  ],
-  [
-   "wait",
-   1000
-  ],
-  [
-   "hold",
-   "ArrowRight",
-   "ArrowRight",
-   39,
-   2000
-  ],
-  [
-   "wait",
-   1500
-  ],
-  [
-   "eval",
-   "warp(0x100)"
-  ],
-  [
-   "wait",
-   4000
-  ],
-  [
-   "hold",
-   "ArrowLeft",
-   "ArrowLeft",
-   37,
-   2000
-  ],
-  [
-   "hold",
-   "Space",
-   " ",
-   32,
-   200
-  ],
-  [
-   "wait",
-   1200
-  ],
-  [
-   "hold",
-   "ShiftLeft",
-   "Shift",
-   16,
-   200
-  ],
-  [
-   "wait",
-   1000
-  ],
-  [
-   "hold",
-   "ArrowRight",
-   "ArrowRight",
-   39,
-   2000
-  ],
-  [
-   "wait",
-   1500
-  ],
-  [
-   "eval",
+   "need",
    "warp(0x127)"
   ],
   [
@@ -443,100 +268,8 @@
    1200
   ],
   [
-   "hold",
-   "ShiftLeft",
-   "Shift",
-   16,
-   200
-  ],
-  [
-   "wait",
-   1000
-  ],
-  [
-   "hold",
-   "ArrowRight",
-   "ArrowRight",
-   39,
-   2000
-  ],
-  [
-   "wait",
-   1500
-  ],
-  [
-   "eval",
-   "warp(0x136)"
-  ],
-  [
-   "wait",
-   4000
-  ],
-  [
-   "hold",
-   "ArrowLeft",
-   "ArrowLeft",
-   37,
-   2000
-  ],
-  [
-   "hold",
-   "Space",
-   " ",
-   32,
-   200
-  ],
-  [
-   "wait",
-   1200
-  ],
-  [
-   "hold",
-   "ShiftLeft",
-   "Shift",
-   16,
-   200
-  ],
-  [
-   "wait",
-   1000
-  ],
-  [
-   "hold",
-   "ArrowRight",
-   "ArrowRight",
-   39,
-   2000
-  ],
-  [
-   "wait",
-   1500
-  ],
-  [
-   "eval",
-   "warp(0x15D)"
-  ],
-  [
-   "wait",
-   4000
-  ],
-  [
-   "hold",
-   "ArrowLeft",
-   "ArrowLeft",
-   37,
-   2000
-  ],
-  [
-   "hold",
-   "Space",
-   " ",
-   32,
-   200
-  ],
-  [
-   "wait",
-   1200
+   "shot",
+   "hailfire.png"
   ],
   [
    "hold",
