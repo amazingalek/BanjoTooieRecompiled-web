@@ -399,6 +399,10 @@ changed status bit other than `FR` as fatal, and the fail-fast path called
 turning the run into `0xC0000409`. Other bits (interrupt mask, kernel mode,
 CU0–CU3) have no effect on recompiled execution, so they are now stored without
 further handling.
+The patch writes these lines as N64ModernRuntime-web 0425eb8 writes them, so
+N64Recomp-browser's web patch, which carries that commit, merges over it with
+nothing to conflict; once `lib/N64Recomp-browser` is on a release with it, the
+hunk can go.
 
 ### 6.2 `thread_queue_remove` never advanced
 
