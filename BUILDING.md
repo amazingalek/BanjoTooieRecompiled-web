@@ -6,7 +6,7 @@ Building section.
 
 `lib/rt64`, `lib/N64ModernRuntime`, `lib/RecompFrontend` and `lib/N64Recomp` are upstream's, at the same commits, and
 patched by `patches/` as upstream patches them (`tools/setup_deps.py`).
-[N64Recomp-browser](https://github.com/amazingalek/N64Recomp-browser) (`lib/N64Recomp-browser`) puts the web support
+[N64Recomp-browser](https://github.com/n64hub/N64Recomp-browser) (`lib/N64Recomp-browser`) puts the web support
 on top of those (its `patches/apply.cmake`) and makes the game a page (its `frontend/`). Where the two change the same
 code, `tools/build_web.sh` leaves N64Recomp-browser's change out of that file: `thread_queue_remove`, which upstream's
 runtime patch fixes too, and the recompiler's jump tables in another section, whose analysis upstream's N64Recomp
@@ -38,7 +38,7 @@ It was built on Linux, in the Docker image N64Recomp-browser's README describes.
 ## Building
 
 ```bash
-git clone --recursive https://github.com/amazingalek/BanjoTooieRecompiled-web
+git clone --recursive https://github.com/n64hub/BanjoTooieRecompiled-web
 cd BanjoTooieRecompiled-web
 tools/build_web.sh "path/to/Banjo-Tooie (USA).z64"
 ```
@@ -80,8 +80,8 @@ then put back the list's header. The list's header says what was played.
 ## How it plays
 
 How the page plays is recorded in N64Recomp-browser's
-[plays.jsonl](https://github.com/amazingalek/N64Recomp-browser/blob/main/plays.jsonl) and its
-[games table](https://github.com/amazingalek/N64Recomp-browser#games).
+[plays.jsonl](https://github.com/n64hub/N64Recomp-browser/blob/main/plays.jsonl) and its
+[games table](https://github.com/n64hub/N64Recomp-browser#games).
 
 The desktop build (upstream's release, Windows, RTX 2070) runs the game at 30 frames a second at the first map of Jinjo
 Village, Glitter Gulch Mine, Ordnance Storage, Mayahem Temple and Cloud Cuckooland, 12 in Terrydactyland and 10 in
